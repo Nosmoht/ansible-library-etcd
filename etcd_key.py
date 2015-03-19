@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 # -*- coding: utf-8 -*-
 
 try:
@@ -9,50 +8,51 @@ except ImportError:
     etcdclient_found = False
 
 def ensure(module):
-    key = module.params['key']
-    value = module.params['value']
+    name = module.params['name']
     state = module.params['state']
-    etcd_host=module.params['host']
-    etcd_port=module.params['port']
-    etcd_protocol=module.params['protocol']
+    value = module.params['value']
+    ttl = module.params['ttl']
+
+    etcd_host = module.params['etcd_host']
+    etcd_port = module.params['etcd_port']
+    etcd_protocol=module.params['etcd_protocol']
     
-    client = etcd.Client(host=etcd_host, port=etcd_port, protocol=etcd_protocol)
+    try:
+        client = etcd.Client(host=etcd_host, port=etcd_port, protocol=etcd_protocol)
+    except Exception as e:
+        module.fail_json(msg='Could not connect to %s://%s:%s: %s' % (etcd_protocol, etcd_host,etcd_port, e.message))
 
     try:
-        existing_key = client.read(key)
-        current_value = client.read(key).value
-    except KeyValue:
-        existing_key = None
-        current_value = None
-        
-    if state == 'present':
-        if not existing_key or current_value != value:
-            try:
-                client.write(key, value)
-                return True
-            except Exception as e:
-                module.fail_json(msg='Could not write key: ' +  e.message)
+        key_value = client.read(name).value
+    except etcd.EtcdKeyNotFound:
+        key_value = None
 
-    if state == 'absent':
-        if existing_key:
-            try:
-                client.delete(key=key)
-                return True
-            except Exception as e:
-                module.fail_json(msg='Could not delete key: ' + e.message)
+    if state == 'present' and key_value != value:
+        try:
+            client.write(key=name, value=value, ttl=ttl)
+            return True
+        except Exception as e:
+            module.fail_json(msg='Could not write key %s: %s' % (name, e.message))
+
+    if state == 'absent' and key_value:
+        try:
+            client.delete(key=name)
+            return True
+        except Exception as e:
+            module.fail_json(msg='Could not delete key %s: %s' % (name, e.message))
 
     return False
 
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            key=dict(required=True, Type='str', alias='name'),
-            value=dict(required=False),
-            ttl=dict(required=False),
-            etcd_host=dict(required=True, Type='str'),
-            etcd_port=dict(required=False, Type='str', Default='4001'),
-            etcd_protocol=dict(required=False,Type='str',Default='http', choices=['http','https']),
-            state=dict(Default='started', choices=['present','absent']),
+            name=dict(required=True, Type='str'),
+            state=dict(required=False, default='present', choices=['present','absent']),
+            value=dict(required=False, default=None),
+            ttl=dict(required=False, default=None),
+            etcd_host=dict(required=False, default='127.0.0.1'),
+            etcd_port=dict(required=False, default=4001),
+            etcd_protocol=dict(required=False, Type='str', default='http', choices=['http','https']),
         ),
     )
 
