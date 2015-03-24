@@ -8,12 +8,12 @@ Ansible library to manage Etcd keys.
 Ensure a key is present
 ```
 - name: Ensure Etcd key
-etcd_key:
-name: myKey
-value: myValue
-state: present
-etcd_host: etcd.example.com
-etcd_port: 4001
+  etcd_key:
+    name: myKey
+    value: myValue
+    state: present
+    etcd_host: etcd.example.com
+    etcd_port: 4001
 ```
 Ensure a key is absent
 ```
