@@ -4,6 +4,9 @@ ansible-library-etcd
 # Description
 Ansible library to manage Etcd keys.
 
+# Requirements
+[python-etcd] is required to be installed.
+
 # Usage
 Ensure a key is present
 ```
@@ -24,3 +27,5 @@ Ensure a key is absent
     etcd_host: etcd.example.com
     etcd_port: 4001
 ```
+
+[python-etcd]: https://github.com/jplana/python-etcd
