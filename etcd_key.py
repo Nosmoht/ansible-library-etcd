@@ -1,11 +1,64 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+DOCUMENTATION = '''
+---
+module: etcd_key
+short_description: Manage Etcd Key/Value pairs with Ansible using Etcd API
+description:
+- Create, update and delete Etcd Key/Value pairs.
+options:
+  name:
+    description:
+    - Key name
+    required: True
+  value:
+    description:
+    - Key value
+    required: False
+    default: None
+  ttl:
+    description:
+    - Value TTL
+  etcd_host:
+    description:
+    - IP or Hostname of the system Etcd is running on
+    required: False
+    default: '127.0.0.1'
+  etcd_port:
+    description:
+     - Port where Etcd API is listening
+    required: False
+    default: 4001
+  etcd_protocol:
+    description:
+    - Protocol to use
+    required: False
+    default: 'http'
+    choices: ['http', 'https']
+notes:
+- Requires the python-etcd package to be installed. See https://github.com/jplana/python-etcd.
+author: Thomas Krahn
+'''
+
+EXAMPLES = '''
+- name: Ensure key is present
+  etcd_key:
+    name: MyKey
+    value: MyValue
+    ttl: 123
+    etcd_host: etcd.example.com
+    etcd_port: 4001
+    etcd_protocol: https
+'''
+
 
 try:
     import etcd
+
     etcdclient_found = True
 except ImportError:
     etcdclient_found = False
+
 
 def ensure(module):
     name = module.params['name']
