@@ -68,44 +68,48 @@ def ensure(module):
 
     etcd_host = module.params['etcd_host']
     etcd_port = module.params['etcd_port']
-    etcd_protocol=module.params['etcd_protocol']
-    
+    etcd_protocol = module.params['etcd_protocol']
+
     try:
         client = etcd.Client(host=etcd_host, port=etcd_port, protocol=etcd_protocol)
     except Exception as e:
-        module.fail_json(msg='Could not connect to %s://%s:%s: %s' % (etcd_protocol, etcd_host,etcd_port, e.message))
+        module.fail_json(msg='Could not connect to {etcd_protocol}://{etcd_host}:{etcd_port}: {error}'.format(
+            etcd_protocol=etcd_protocol, etcd_host=etcd_host, etcd_port=etcd_port, error=e.message))
 
     try:
         key_value = client.read(name).value
     except etcd.EtcdKeyNotFound:
         key_value = None
 
-    if state == 'present' and key_value != value:
-        try:
-            client.write(key=name, value=value, ttl=ttl)
-            return True
-        except Exception as e:
-            module.fail_json(msg='Could not write key %s: %s' % (name, e.message))
+    if state == 'present':
+        if key_value != value:
+            try:
+                client.write(key=name, value=value, ttl=ttl)
+                return True
+            except Exception as e:
+                module.fail_json(msg='Could not write key {key}: {error}'.format(key=name, error=e.message))
 
-    if state == 'absent' and key_value:
-        try:
-            client.delete(key=name)
-            return True
-        except Exception as e:
-            module.fail_json(msg='Could not delete key %s: %s' % (name, e.message))
+    if state == 'absent':
+        if key_value:
+            try:
+                client.delete(key=name)
+                return True
+            except Exception as e:
+                module.fail_json(msg='Could not delete key {key}: {error}'.format(key=name, error=e.message))
 
     return False
+
 
 def main():
     module = AnsibleModule(
         argument_spec=dict(
-            name=dict(required=True, Type='str'),
-            state=dict(required=False, default='present', choices=['present','absent']),
-            value=dict(required=False, default=None),
-            ttl=dict(required=False, default=None),
-            etcd_host=dict(required=False, default='127.0.0.1'),
-            etcd_port=dict(required=False, default=4001),
-            etcd_protocol=dict(required=False, Type='str', default='http', choices=['http','https']),
+            name=dict(type='str', required=True),
+            state=dict(type='str', default='present', choices=['present', 'absent']),
+            value=dict(type='str', default=None),
+            ttl=dict(type='int', default=None),
+            etcd_host=dict(type='str', default='127.0.0.1'),
+            etcd_port=dict(type='int', default=4001),
+            etcd_protocol=dict(type='str', default='http', choices=['http', 'https']),
         ),
     )
 
@@ -117,4 +121,5 @@ def main():
 
 # import module snippets
 from ansible.module_utils.basic import *
+
 main()
