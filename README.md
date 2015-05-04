@@ -28,4 +28,8 @@ Ensure a key is absent
     etcd_port: 4001
 ```
 
+# Author information
+[Thomas Krahn]
+
 [python-etcd]: https://github.com/jplana/python-etcd
+[Thomas Krahn]: mailto:ntbc@gmx.net
