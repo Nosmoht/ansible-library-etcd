@@ -14,6 +14,7 @@ Ensure a key is present
   etcd_key:
     name: myKey
     value: myValue
+    ttl: 10
     state: present
     etcd_host: etcd.example.com
     etcd_port: 4001
